@@ -41,39 +41,36 @@ export function calculateCompoundInterest(
   let totalContributions = 0;
   let totalInterestEarned = 0;
 
+  // Daily compounding: exact growth over one month, so 12 months give (1 + r/365)^365
+  const dailyMonthFactor = Math.pow(1 + annualRate / 365, 365 / 12) - 1;
+  // Annual, semi-annual, quarterly, monthly: months per compounding period (12, 6, 3, 1)
+  const monthsPerPeriod = compoundingFrequency === 365 ? 0 : 12 / compoundingFrequency;
+
   // Calculate year by year
   for (let year = 1; year <= years; year++) {
     const yearStartAmount = currentAmount;
     let yearContributions = 0;
     let yearInterest = 0;
+    let accrued = 0;
 
-    // Compound interest periods per year
-    const periodsPerYear = compoundingFrequency;
-    const ratePerPeriod = annualRate / periodsPerYear;
-
-    // Process monthly contributions throughout the year
     for (let month = 1; month <= 12; month++) {
-      // Add monthly contribution
+      // Contribution arrives at the start of the month
       currentAmount += monthlyContribution;
       yearContributions += monthlyContribution;
 
-      // Apply compound interest for this month
-      // Interest compounds based on the selected frequency within each month
-      const periodsInMonth = periodsPerYear / 12;
-
-      if (periodsInMonth >= 1) {
-        // Multiple compounding periods in a month (e.g., daily compounding)
-        for (let period = 0; period < periodsInMonth; period++) {
-          const periodInterest = currentAmount * ratePerPeriod;
-          currentAmount += periodInterest;
-          yearInterest += periodInterest;
-        }
+      if (monthsPerPeriod === 0) {
+        const interest = currentAmount * dailyMonthFactor;
+        currentAmount += interest;
+        yearInterest += interest;
       } else {
-        // Less than monthly compounding (e.g., quarterly, semi-annual, annual)
-        // Apply pro-rata interest for the month
-        const monthlyInterest = currentAmount * (annualRate / 12);
-        currentAmount += monthlyInterest;
-        yearInterest += monthlyInterest;
+        // Interest accrues on the balance each month but is only credited, and starts
+        // earning interest itself, at the end of each compounding period
+        accrued += currentAmount * (annualRate / 12);
+        if (month % monthsPerPeriod === 0) {
+          currentAmount += accrued;
+          yearInterest += accrued;
+          accrued = 0;
+        }
       }
     }
 
@@ -137,7 +134,7 @@ export function calculatePrincipalNeeded(
   // Use binary search to find the required principal
   let low = 0;
   let high = targetAmount;
-  let tolerance = 1; // $1 tolerance
+  const tolerance = 1; // $1 tolerance
 
   while (high - low > tolerance) {
     const mid = (low + high) / 2;

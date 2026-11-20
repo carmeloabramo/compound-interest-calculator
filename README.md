@@ -91,7 +91,7 @@ Where:
 The calculator:
 1. Starts with your initial investment (principal)
 2. Adds monthly contributions at the start of each month
-3. Applies compound interest according to the selected frequency
+3. Applies compound interest according to the selected frequency: interest accrues on the balance each month and is credited (and starts compounding) at the end of each period - yearly, every 6 months, every 3 months or monthly. Daily compounding applies the exact daily factor, (1 + r/365)^365 over a year
 4. Tracks cumulative growth year by year
 5. Calculates total contributions, interest earned, and growth rate
 
